@@ -1,0 +1,46 @@
+services:
+  node-app:
+    build: .
+    container_name: MultiZF_Node
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GATEKEEPER_KEY=${GATEKEEPER_KEY:-Xiemac123!}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-supernode-secret-key}
+      - NODE_OPTIONS=--max-old-space-size=512
+      - ENGINE_URL=http://go-engine:8080
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - go-engine
+
+  go-engine:
+    build: 
+      context: ./go-engine
+      dockerfile: Dockerfile
+    container_name: MultiZF_GoEngine
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
